@@ -1,0 +1,47 @@
+spring:
+  application:
+    name: cv-forge-backend
+  profiles:
+    active: dev
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/cvforge_db}
+    username: ${POSTGRES_USER:cvforge}
+    password: ${POSTGRES_PASSWORD:cvforge_password}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          time_zone: UTC
+    show-sql: false
+    open-in-view: false
+
+  ai:
+    openai:
+      api-key: ${OPENAI_API_KEY:demo-key}
+      chat:
+        options:
+          model: ${OPENAI_MODEL:gpt-4o-mini}
+          temperature: 0.3
+
+  servlet:
+    multipart:
+      max-file-size: 2MB
+      max-request-size: 2MB
+
+server:
+  port: ${SERVER_PORT:8080}
+
+app:
+  upload-dir: ${APP_UPLOAD_DIR:uploads/avatars}
+  cors:
+    allowed-origins: ${ALLOWED_ORIGINS:http://localhost:4200,http://127.0.0.1:4200}
+  rate-limit:
+    capacity: 5
+    refill-tokens: 5
+    refill-duration-minutes: 1

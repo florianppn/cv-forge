@@ -1,0 +1,492 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+\usepackage{geometry}
+\geometry{top=2.5cm, bottom=2.5cm, left=2.5cm, right=2.5cm}
+\usepackage{fancyhdr}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{xcolor}
+\usepackage{colortbl}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{longtable}
+\usepackage{hyperref}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=black,
+    urlcolor=blue,
+    citecolor=black
+}
+
+\definecolor{headergray}{gray}{0.92}
+\definecolor{rowgray}{gray}{0.97}
+
+\setlength{\headheight}{14pt}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{Rapport d'Architecture}
+\fancyhead[R]{Projet CV-Forge}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0pt}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt}
+
+\begin{document}
+
+% ==============================================================================
+% PAGE DE GARDE
+% ==============================================================================
+\thispagestyle{empty}
+\vspace*{2.5cm}
+
+\begin{center}
+    {\huge \textbf{Projet CV-Forge :}}\\[0.4cm]
+    {\LARGE \textbf{Conception et réalisation d'un générateur de CV}}\\[0.2cm]
+    {\LARGE \textbf{optimisé ATS avec Spring AI et Angular}}\\[0.8cm]
+    {\large \textit{Rapport d'architecture logicielle, choix de conception et implémentation technique}}\\[2.5cm]
+
+    \setlength{\fboxrule}{1pt}
+    \framebox[12.5cm]{%
+        \begin{minipage}{11.5cm}
+            \vspace{0.4cm}
+            \begin{center}
+                \textbf{\large Fiche documentaire}
+            \end{center}
+            \vspace{0.2cm}
+            \hrule
+            \vspace{0.5cm}
+            \begin{tabular}{ll}
+                \textbf{Projet :} & CV-Forge (Générateur ATS-First) \\[0.25cm]
+                \textbf{Auteur :} & Florian Pépin \\[0.25cm]
+                \textbf{Version :} & 1.0 \\[0.25cm]
+                \textbf{Date :} & 26 septembre 2026 \\
+            \end{tabular}
+            \vspace{0.5cm}
+        \end{minipage}
+    }
+\end{center}
+
+\newpage
+
+% ==============================================================================
+% TABLE DES MATIÈRES
+% ==============================================================================
+\tableofcontents
+\newpage
+
+% ==============================================================================
+% 1. INTRODUCTION
+% ==============================================================================
+\section{Introduction}
+
+Le projet \textbf{CV-Forge} a pour objectif d'offrir une plateforme performante, intuitive et hautement qualifiée de génération de curriculum vitæ spécialement calibrés pour franchir avec succès les filtres des \textit{Applicant Tracking Systems} (ATS). Les systèmes ATS représentent aujourd'hui le premier goulot d'étranglement du recrutement moderne : plus de 75\,\% des candidatures sont écartées avant même le moindre examen humain en raison de formats illisibles, de structures polychromes inadaptées ou d'un manque d'alignement sémantique avec la fiche de poste.
+
+L'application est architecturée autour des composants suivants :
+\begin{itemize}
+    \item \textbf{Backend RESTful \& Orchestration IA} : Développé en Java 21 avec \textbf{Spring Boot 3.3}, exploitant \textbf{Spring AI} et les modèles de langage de dernière génération (\texttt{gpt-4o-mini} / \texttt{gpt-4o}) via des sorties rigoureusement typées (\textit{Structured Outputs}). Le serveur prend en charge la transformation du texte brut, le matching d'offres et la protection par limitation de débit (\textbf{Bucket4j}).
+    \item \textbf{Base de Données Hybride Relationnelle / Document} : Propulsée par \textbf{PostgreSQL 16}, combinant l'intégrité référentielle JPA/Hibernate pour l'agrégat racine et la flexibilité du stockage semi-structuré \textbf{JSONB} pour le contenu textuel et le paramétrage visuel.
+    \item \textbf{Moteur de Rendu Documentaire ATS} : Moteur de génération vectoriel 100\,\% Java fondé sur \textbf{Thymeleaf} et \textbf{OpenHTMLtoPDF}, garantissant une disposition mono-colonne sémantique, des polices standardisées et un texte intégralement sélectionnable.
+    \item \textbf{Frontend Single Page Application (SPA)} : Conçu avec \textbf{Angular 18/19} en architecture Standalone, exploitant les \textit{Signals} réactifs et le système utilitaire \textbf{Tailwind CSS} pour une prévisualisation instantanée sans re-génération superflue.
+    \item \textbf{Infrastructure \& Conteneurisation} : Déploiement automatisé multi-conteneurs via \textbf{Docker Compose} avec isolation étanche des secrets et environnement de test en mémoire (\textbf{H2}).
+\end{itemize}
+
+\newpage
+
+% ==============================================================================
+% 2. PARTIE I : ARCHITECTURE ET RÉALISATION DU BACKEND
+% ==============================================================================
+\section{Partie I : Architecture et réalisation du backend}
+
+\subsection{Choix de conception et justifications techniques}
+
+\subsubsection{Axe 1 : Découplage strict entre Contenu structuré (IA) et Style graphique}
+\textbf{Question :} Comment permettre à l'utilisateur de personnaliser l'apparence de son CV sans engendrer de surcoûts d'appels à l'IA ni de latence inutile ?
+
+\textbf{Options :}
+\begin{itemize}
+    \item[$\boxtimes$] Séparation architecturale totale entre \texttt{CvContent} (données textuelles) et \texttt{CvStyle} (cosmétique visuelle).
+    \item[$\square$] Objet unique combinant données de contenu et paramètres visuels re-généré à chaque modification.
+    \item[$\square$] Demander à l'IA de produire directement du code HTML ou CSS complet à chaque requête.
+\end{itemize}
+
+\textbf{Pourquoi :} L'intelligence artificielle est sollicitée pour son raisonnement textuel, sa capacité de synthèse et l'optimisation des mots-clés ATS. En revanche, modifier une couleur d'accentuation, la police de caractères, la densité d'interligne ou la disposition des puces est une opération 100\,\% déterministe. En isolant \texttt{CvContent} et \texttt{CvStyle}, l'utilisateur peut ajuster en temps réel l'apparence de son CV avec un temps de réponse instantané (< 10\,ms) et un coût d'inférence nul.
+
+\subsubsection{Axe 2 : Mode d'inférence IA et sorties structurées (Structured Output)}
+\textbf{Question :} Comment garantir que la réponse produite par le modèle de langage soit immédiatement exploitable sans risque d'erreur de parsing ?
+
+\textbf{Options :}
+\begin{itemize}
+    \item[$\boxtimes$] Utilisation du mécanisme \textit{Structured Output} de Spring AI avec sérialisation type-safe directe (\texttt{.entity(CvContent.class)}).
+    \item[$\square$] Génération de texte libre Markdown puis extraction artisanale par expressions régulières (Regex).
+    \item[$\square$] Demande informelle de JSON dans le prompt avec désérialisation manuelle via \texttt{ObjectMapper}.
+\end{itemize}
+
+\textbf{Pourquoi :} Le parsing manuel de texte libre ou de blocs de code JSON non contraints est notoirement fragile : les modèles de langage peuvent ajouter du texte conversationnel (\textit{« Voici votre CV... »}) ou omettre des virgules. Le \textit{Structured Output} impose un schéma JSON strict dès l'échantillonnage des jetons par le modèle. La désérialisation vers le DTO Java est garantie, éliminant tout échec de parsing à l'exécution.
+
+\subsubsection{Axe 3 : Stratégie de persistance et modélisation hybride}
+\textbf{Question :} Comment modéliser et stocker le CV en base de données pour concilier requêtes SQL rapides et flexibilité d'arborescence ?
+
+\textbf{Options :}
+\begin{itemize}
+    \item[$\boxtimes$] Modèle hybride PostgreSQL avec table racine \texttt{CvProfile} (UUID) et colonnes \textbf{JSONB} pour le contenu et le style.
+    \item[$\square$] Modèle 100\,\% relationnel normalisé avec 6 tables jointes (\texttt{cv\_experience}, \texttt{cv\_bullets}, etc.).
+    \item[$\square$] Base de données NoSQL orientée document (MongoDB) découplée de l'écosystème Spring Boot habituel.
+\end{itemize}
+
+\textbf{Pourquoi :} Un CV complet présente une structure hiérarchique polymorphe (liste variable d'expériences, bullets quantifiés, compétences catégorisées). Une normalisation relationnelle classique exigerait de multiples jointures, des opérations de cascade lourdes et des verrous complexes lors des mises à jour. Grâce au support natif du format JSONB par PostgreSQL et Hibernate 6 (\texttt{@JdbcTypeCode(SqlTypes.JSON)}), nous bénéficions du meilleur des deux mondes : requêtage direct par index et souplesse totale du schéma.
+
+\newpage
+
+\subsubsection{Axe 4 : Moteur de génération de CV et conformité ATS}
+\textbf{Question :} Quelle technologie de rendu adopter pour produire un fichier PDF parfaitement lisible par les robots de recrutement ATS ?
+
+\textbf{Options :}
+\begin{itemize}
+    \item[$\boxtimes$] Moteur de gabarit \textbf{Thymeleaf} associé à \textbf{OpenHTMLtoPDF} (100\,\% Java natif, flux vectoriel pur).
+    \item[$\square$] Pilotage d'un navigateur headless externe (Playwright / Puppeteer / Chromium).
+    \item[$\square$] Génération programmatique impérative de bas niveau avec Apache PDFBox ou iText.
+\end{itemize}
+
+\textbf{Pourquoi :} Les analyseurs ATS ont besoin d'un texte continu, sélectionnable, encodé en UTF-8 et exempt d'éléments graphiques complexes (colonnes flottantes, calques transparents ou images bitmap de texte) qui faussent la lecture de haut en bas. Thymeleaf permet de structurer un template HTML5 sémantique (\texttt{header}, \texttt{section}, \texttt{h1}, \texttt{ul}), tandis qu'OpenHTMLtoPDF le compile instantanément en Java sans aucune dépendance binaire externe lourde, garantissant une conformité ATS optimale.
+
+\subsubsection{Axe 5 : Spécificités culturelles et gestion de la photo selon le pays cible}
+\textbf{Question :} Comment traiter la présence de la photo de profil face aux divergences culturelles et aux normes juridiques internationales ?
+
+\textbf{Options :}
+\begin{itemize}
+    \item[$\boxtimes$] Règle métier automatisée dans l'agrégat : désactivation obligatoire de la photo pour les pays anglo-saxons (US, UK, CA, AU) et activation optionnelle pour l'Europe.
+    \item[$\square$] Inclusion systématique de la photo sur tous les CV générés.
+    \item[$\square$] Laisser l'utilisateur totalement libre sans avertissement ni ajustement automatique.
+\end{itemize}
+
+\textbf{Pourquoi :} Aux États-Unis, au Royaume-Uni et au Canada, les lois anti-discrimination interdisent formellement ou pénalisent lourdement la présence de photos sur les candidatures ; les logiciels ATS y rejettent souvent d'office les CV photographiés pour protéger l'employeur. À l'inverse, en France ou en Allemagne, la photo reste courante. L'agrégat racine \texttt{CvProfile} applique automatiquement cette règle dès la détection du code pays cible.
+
+\subsubsection{Axe 6 : Modèle de session et gestion des utilisateurs}
+\textbf{Question :} Comment permettre l'usage immédiat de la plateforme sans imposer la friction d'une création de compte obligatoire ?
+
+\textbf{Options :}
+\begin{itemize}
+    \item[$\boxtimes$] Service public avec identification par session anonyme persistante (\texttt{X-Session-Id} / UUID).
+    \item[$\square$] Obligation de créer un compte avec email, mot de passe chiffré et confirmation par jeton JWT.
+    \item[$\square$] Absence totale de persistance (flux purement éphémère sans possibilité de recharger son travail).
+\end{itemize}
+
+\textbf{Pourquoi :} Pour un générateur de CV en libre accès, exiger une inscription préalable fait fuir plus de 60\,\% des visiteurs. En attribuant un identifiant de session unique (\texttt{sessionId}) stocké dans le navigateur du client, l'utilisateur peut générer plusieurs CV, les recharger et les modifier à tout moment, tout en conservant une API totalement découplée et prête pour une authentification ultérieure.
+
+\subsubsection{Axe 7 : Protection des coûts et limitation de débit (Rate-Limiting)}
+\textbf{Question :} Comment prémunir le backend contre les abus, les attaques par déni de service et la surconsommation de l'API OpenAI ?
+
+\textbf{Options :}
+\begin{itemize}
+    \item[$\boxtimes$] Filtre de contrôle de flux basé sur l'algorithme du seau à jetons (\textbf{Bucket4j}) ciblé sur les routes IA par adresse IP.
+    \item[$\square$] Limitation globale de bande passante au niveau du pare-feu réseau.
+    \item[$\square$] Aucun contrôle de débit avec confiance accordée aux clients.
+\end{itemize}
+
+\textbf{Pourquoi :} Les appels aux modèles de langage représentent le coût opérationnel principal de la plateforme. Le filtre \texttt{RateLimitingFilter} intercepte les requêtes \texttt{POST} adressées à \texttt{/generate} et \texttt{/match}, accordant un crédit de 5 requêtes par minute par IP avant de renvoyer un code \texttt{429 Too Many Requests}, sans impacter la consultation ou l'exportation des CVs existants.
+
+\subsubsection{Axe 8 : Résilience, tolérance aux pannes et fallbacks IA}
+\textbf{Question :} Comment garantir que l'application reste utilisable et testable en environnement hors-ligne ou en cas d'indisponibilité du fournisseur LLM ?
+
+\textbf{Options :}
+\begin{itemize}
+    \item[$\boxtimes$] Détection automatique des clés démo/hors-ligne et bascule transparente vers un générateur de secours déterministe.
+    \item[$\square$] Échec brutal avec code 500 dès que la connexion externe est indisponible.
+    \item[$\square$] Blocage de l'application au démarrage en cas d'absence de variable d'environnement active.
+\end{itemize}
+
+\textbf{Pourquoi :} Lors des démonstrations, des sessions de développement local ou des tests d'intégration automatisés (\texttt{mvn test}), une dépendance stricte à une connexion Internet et à un compte OpenAI approvisionné est inacceptable. Le service \texttt{AiCvService} détecte les situations hors-ligne et fournit un contenu mocké riche et réaliste, garantissant une suite de tests 100\,\% verte en tout lieu.
+
+\newpage
+
+\subsection{Modèle de données et schéma}
+
+Le modèle de données de CV-Forge s'articule autour de l'agrégat racine \texttt{CvProfile} persistant en base relationnelle, hébergeant ses deux sous-systèmes documentaires au format JSONB :
+
+\begin{center}
+\begin{verbatim}
++-------------------------------------------------------------------------+
+|                               cv_profiles                               |
++-------------------------------------------------------------------------+
+| id                  : UUID               [PK]                           |
+| session_id          : VARCHAR(255)       [INDEX]                        |
+| user_email          : VARCHAR(255)                                      |
+| target_country      : VARCHAR(10)        (ex: 'FR', 'US', 'GB')         |
+| photo_url           : VARCHAR(500)       (ex: '/api/v1/cv/photos/..')   |
+| created_at          : TIMESTAMP WITH TIME ZONE                          |
+| updated_at          : TIMESTAMP WITH TIME ZONE                          |
++-------------------------------------------------------------------------+
+| content             : JSONB (Structure CvContent)                       |
+|   +-- contactInfo   : { fullName, email, phone, location, linkedinUrl } |
+|   +-- summary       : "Profil professionnel oriente impact..."          |
+|   +-- experiences[] : [ { title, company, dates, bullets[] } ]          |
+|   +-- educations[]  : [ { degree, institution, graduationDate } ]       |
+|   +-- skills[]      : [ { categoryName, skills[] } ]                    |
+|   \-- matchResult   : { matchScore, matchedKeywords, missingKeywords }  |
++-------------------------------------------------------------------------+
+| style               : JSONB (Structure CvStyle)                         |
+|   +-- primaryColor  : VARCHAR (ex: '#1a365d')                           |
+|   +-- fontFamily    : VARCHAR (ex: 'Helvetica', 'Times New Roman')      |
+|   +-- density       : ENUM ('COMPACT', 'NORMAL', 'SPACIOUS')            |
+|   +-- bulletStyle   : ENUM ('DISC', 'CIRCLE', 'SQUARE', 'HYPHEN')       |
+|   +-- sectionOrder  : ['SUMMARY', 'EXPERIENCE', 'EDUCATION', 'SKILLS']  |
+|   \-- showPhoto     : BOOLEAN (regle pays automatique)                  |
++-------------------------------------------------------------------------+
+\end{verbatim}
+\end{center}
+
+\subsection{Matrice de règles métier ATS et politique d'accès}
+
+\begin{table}[h!]
+\centering
+\small
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{|l|c|c|c|l|}
+\hline
+\rowcolor{headergray}
+\textbf{Zone géographique} & \textbf{Photo autorisée} & \textbf{Disposition} & \textbf{Rubriques clés} & \textbf{Recommandation ATS} \\
+\hline
+\textbf{États-Unis / Canada} & $\times$ (Désactivée) & Mono-colonne & Expérience, Compétences & Zéro photo, pas d'état civil \\
+\hline
+\textbf{Royaume-Uni (UK)} & $\times$ (Désactivée) & Mono-colonne & Summary, Work Experience & Neutralité stricte anti-biais \\
+\hline
+\textbf{France / Benelux} & $\checkmark$ (Optionnelle) & Mono-colonne & Profil, Parcours, Diplômes & Photo discrète et professionnelle \\
+\hline
+\textbf{Allemagne (DACH)} & $\checkmark$ (Optionnelle) & Mono-colonne & Beruflicher Werdegang & Structure très factuelle et datée \\
+\hline
+\end{tabular}
+\caption{Matrice des règles d'adaptation culturelle et de conformité ATS}
+\end{table}
+
+\subsection{Validation et tests automatisés du backend}
+
+Afin d'assurer une fiabilité absolue du moteur de rendu, de la sérialisation JSONB et de la conformité des flux d'API, une suite complète de 16 tests automatisés a été implémentée avec JUnit 5, Spring Boot Test et MockMvc :
+
+\begin{table}[h!]
+\centering
+\small
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{|l|l|l|c|c|}
+\hline
+\rowcolor{headergray}
+\textbf{Domaine} & \textbf{Type} & \textbf{Scénarios validés} & \textbf{Tests} & \textbf{Statut} \\
+\hline
+\textbf{Moteur PDF ATS} & Unitaire / Rendu & Flux vectoriel valide (\%PDF-), styles, densités & 3 & $\checkmark$ \\
+\hline
+\textbf{Orchestration IA} & Métier & Génération structurée, extraction mots-clés & 2 & $\checkmark$ \\
+\hline
+\textbf{Cycle de vie CV} & Intégration JPA & Découplage style/contenu, règle pays ATS & 2 & $\checkmark$ \\
+\hline
+\textbf{Contrôleur REST} & MockMvc HTTP & Contrats d'API, validation 400, upload photo & 7 & $\checkmark$ \\
+\hline
+\textbf{Rate-Limiting} & Filtre Bucket4j & Débit nominal, blocage 429 au dépassement & 2 & $\checkmark$ \\
+\hline
+\rowcolor{rowgray}
+\multicolumn{3}{|l|}{\textbf{Total des tests exécutés via \texttt{mvn test}}} & \textbf{16} & \textbf{100\,\%} \\
+\hline
+\end{tabular}
+\caption{Synthèse concise des tests automatisés du backend}
+\end{table}
+
+\newpage
+
+% ==============================================================================
+% 3. PARTIE II : ARCHITECTURE ET RÉALISATION DU FRONTEND
+% ==============================================================================
+\section{Partie II : Architecture et réalisation du frontend}
+
+\subsection{Choix de conception du client web}
+
+\subsubsection{Axe 9 : Framework SPA réactif et composants Standalone}
+\textbf{Question :} Quelle technologie frontend privilégier pour une interface fluide, modulaire et hautement réactive ?
+
+\textbf{Options :}
+\begin{itemize}
+    \item[$\boxtimes$] \textbf{Angular 18/19} avec architecture \textit{Standalone} intégrale et \textit{Signals}.
+    \item[$\square$] React avec bibliothèque externe de gestion d'état (Redux).
+    \item[$\square$] Page HTML statique avec jQuery et rechargements périodiques.
+\end{itemize}
+
+\textbf{Pourquoi :} Angular offre un cadre robuste avec injection de dépendances native, validation fine des formulaires réactifs et typage TypeScript strict. L'utilisation des \textit{Signals} permet une réactivité à granularité fine : lorsqu'un paramètre cosmétique est modifié, seul le composant d'aperçu est redessiné sans cycle global de détection des changements.
+
+\subsubsection{Axe 10 : Solution de mise en page et design visuel}
+\textbf{Question :} Comment assurer une esthétique soignée tout en facilitant l'ajustement dynamique des styles ?
+
+\textbf{Options :}
+\begin{itemize}
+    \item[$\boxtimes$] \textbf{Tailwind CSS} (utilitaires atomiques modernes et sur-mesure).
+    \item[$\square$] Bootstrap 5 avec composants figés et classes impératives.
+    \item[$\square$] Feuille de style CSS pure manuscrite sans système utilitaire.
+\end{itemize}
+
+\textbf{Pourquoi :} Tailwind CSS permet de concevoir des composants d'une grande finesse visuelle (sélectionneurs de couleurs, badges de score ATS, bascules de densité) tout en éliminant les fichiers CSS superflus grâce à la purge automatique au build.
+
+\subsubsection{Axe 11 : Prévisualisation dynamique et découplage visuel}
+\textbf{Question :} Comment offrir à l'utilisateur un retour visuel instantané lors des retouches graphiques ?
+
+\textbf{Options :}
+\begin{itemize}
+    \item[$\boxtimes$] Rendu dynamique du modèle \texttt{CvContent} combiné aux variables réactives de \texttt{CvStyle} dans le DOM du navigateur.
+    \item[$\square$] Re-génération complète du PDF côté serveur à chaque clic avec affichage dans un iframe.
+    \item[$\square$] Absence d'aperçu avant le téléchargement final du fichier PDF.
+\end{itemize}
+
+\textbf{Pourquoi :} Télécharger un PDF généré par le serveur à chaque clic sur une nuance de couleur introduirait une latence insupportable et saturerait le réseau. L'aperçu Angular reflète fidèlement la structure du template PDF en appliquant les variables CSS locales, réservant l'appel au serveur pour l'exportation finale.
+
+\subsection{Écrans et parcours utilisateur}
+
+L'application guide le candidat au travers d'un flux linéaire pensé pour minimiser l'effort de saisie :
+\begin{enumerate}
+    \item \textbf{Écran 1 : Saisie brute des informations (\texttt{/}) } : Le candidat colle son parcours professionnel brut, ses formations, ses coordonnées et optionnellement l'annonce ciblée.
+    \item \textbf{Écran 2 : Atelier d'optimisation et d'aperçu (\texttt{/cv/:id}) } : Affichage en direct du CV structuré par l'IA. Le candidat peut retoucher le texte manuellement, visualiser son score de matching ATS (mots-clés trouvés et suggestions), uploader sa photo et personnaliser son thème visuel (couleurs, puces, marges).
+    \item \textbf{Écran 3 : Exportation certifiée ATS} : Téléchargement en un clic du PDF vectoriel prêt pour les plateformes d'embauche.
+\end{enumerate}
+
+\newpage
+
+% ==============================================================================
+% 4. PARTIE III : DÉPLOIEMENT, GESTION DES SECRETS ET CONCLUSION
+% ==============================================================================
+\section{Partie III : Déploiement, gestion des secrets et conclusion}
+
+\subsection{Orchestration conteneurisée et isolation des secrets}
+
+L'ensemble de l'infrastructure de développement et de production est orchestré à l'aide d'un fichier \texttt{docker-compose.yml} :
+\begin{itemize}
+    \item \textbf{\texttt{cvforge-postgres}} : Conteneur PostgreSQL 16 Alpine avec volume persistant (\texttt{cvforge\_pgdata}) et contrôle de santé automatisé (\textit{healthcheck}).
+    \item \textbf{\texttt{cvforge-backend}} : Conteneur Spring Boot Java 21 optimisé pour un démarrage rapide.
+\end{itemize}
+
+\textbf{Gestion rigoureuse des secrets :}
+\begin{itemize}
+    \item Aucun mot de passe ni clé d'API secrète n'est consigné dans le code source versionné.
+    \item Un gabarit documenté \texttt{.env.example} est mis à disposition comme référence de configuration.
+    \item Le fichier d'exclusion \texttt{.gitignore} bloque strictement tout commit de fichiers \texttt{.env} ou de répertoires de stockage local (\texttt{uploads/}).
+\end{itemize}
+
+\subsection{Conclusion et bilan de réalisation}
+
+La plateforme \textbf{CV-Forge} constitue une solution complète, moderne et industrielle répondant aux exigences rigoureuses du recrutement contemporain :
+\begin{itemize}
+    \item \textbf{Excellence fonctionnelle} : Découplage strict entre intelligence artificielle textuelle et personnalisation stylistique, évitant les gaspillages de ressources de calcul.
+    \item \textbf{Conformité ATS sans compromis} : Modèle documentaire mono-colonne, respect des règles culturelles par pays (omission automatisée de photo pour US/UK/CA) et texte vectoriel 100\,\% sélectionnable.
+    \item \textbf{Qualité logicielle démontrée} : Suite de tests automatisés exhaustive validant les contrats d'API, le rate-limiting, la persistance JSONB et la conformité du moteur de rendu PDF.
+\end{itemize}
+
+\newpage
+
+% ==============================================================================
+% ANNEXE 1 : RÉFÉRENTIEL DES END-POINTS API
+% ==============================================================================
+\appendix
+\section{Annexe 1 : Référentiel des End-points API}
+
+\begin{table}[h!]
+\centering
+\small
+\renewcommand{\arraystretch}{1.25}
+\begin{tabularx}{\textwidth}{|l|l|l|X|}
+\hline
+\rowcolor{headergray}
+\textbf{Méthode} & \textbf{Chemin (URI)} & \textbf{Accès} & \textbf{Rôle et description fonctionnelle} \\
+\hline
+\texttt{POST} & \texttt{/api/v1/cv/generate} & Public / Session & Génération du CV structuré par l'IA à partir des données brutes saisies (soumis au rate-limiting). \\
+\hline
+\texttt{GET} & \texttt{/api/v1/cv/\{id\}} & Public / Session & Récupération du profil CV complet (contenu textuel, style et métadonnées). \\
+\hline
+\texttt{GET} & \texttt{/api/v1/cv?sessionId=...} & Public / Session & Consultation de la liste de tous les CVs rattachés à la session courante du candidat. \\
+\hline
+\texttt{PUT} & \texttt{/api/v1/cv/\{id\}/content} & Propriétaire & Modification manuelle du contenu textuel du CV sans solliciter le modèle d'IA. \\
+\hline
+\texttt{PUT} & \texttt{/api/v1/cv/\{id\}/style} & Propriétaire & Personnalisation cosmétique (couleurs, polices, densité, puces) sans appel IA. \\
+\hline
+\texttt{POST} & \texttt{/api/v1/cv/\{id\}/match} & Propriétaire & Analyse de matching ATS entre le CV et une nouvelle offre (score, mots-clés manquants). \\
+\hline
+\texttt{POST} & \texttt{/api/v1/cv/\{id\}/photo} & Propriétaire & Upload de la photo de profil avec validation de format (JPEG/PNG/WEBP $\le$ 2\,Mo). \\
+\hline
+\texttt{GET} & \texttt{/api/v1/cv/photos/\{name\}} & Public & Téléchargement et restitution directe de la ressource image de profil. \\
+\hline
+\texttt{GET} & \texttt{/api/v1/cv/\{id\}/pdf} & Public / Session & Génération et streaming du document PDF final compilé aux normes ATS. \\
+\hline
+\end{tabularx}
+\caption{Répertoire complet des endpoints de l'API REST CV-Forge}
+\end{table}
+
+\newpage
+
+% ==============================================================================
+% ANNEXE 2 : RÉFÉRENTIEL DES TESTS UNITAIRES ET D'INTÉGRATION
+% ==============================================================================
+\section{Annexe 2 : Référentiel des tests unitaires et d'intégration}
+
+\subsection{Matrice des Tests Unitaires et de Rendu Documentaire}
+
+\begin{table}[h!]
+\centering
+\small
+\renewcommand{\arraystretch}{1.2}
+\begin{tabularx}{\textwidth}{|l|l|X|}
+\hline
+\rowcolor{headergray}
+\textbf{Composant} & \textbf{Méthode de test (@Test)} & \textbf{Scénario et comportement attendu} \\
+\hline
+\texttt{PdfExportService} & \texttt{testRenderCvPdf\_Success} & Rendu d'un CV en document PDF vectoriel, vérification de la signature magique \texttt{\%PDF-} et de la taille. \\
+\hline
+\texttt{PdfExportService} & \texttt{testRenderCvPdf\_WithCustomStyles} & Validation du moteur de gabarit lors de l'application de densités (COMPACT) et polices variées. \\
+\hline
+\texttt{PdfExportService} & \texttt{testRenderCvPdf\_NullSafety} & Contrôle de robustesse : levée d'une \texttt{IllegalArgumentException} si les données sont absentes. \\
+\hline
+\texttt{AiCvService} & \texttt{testGenerateCvContent} & Structuration nominale du texte brut en un objet \texttt{CvContent} doté d'expériences et de bullets d'action. \\
+\hline
+\texttt{AiCvService} & \texttt{testAnalyzeJobMatch} & Évaluation d'adéquation avec calcul objectif du score (0 à 100) et extraction des mots-clés de l'annonce. \\
+\hline
+\texttt{RateLimitingFilter} & \texttt{testRateLimiting\_Exceeded} & Vérification du blocage HTTP 429 Too Many Requests dès le dépassement du quota fixé sur les routes IA. \\
+\hline
+\texttt{RateLimitingFilter} & \texttt{testNonAiEndpoints\_NotRateLimited} & Garantie de non-blocage pour les requêtes de consultation ordinaires (méthodes GET). \\
+\hline
+\end{tabularx}
+\caption{Référentiel détaillé des tests unitaires et du moteur de rendu}
+\end{table}
+
+\subsection{Matrice des Tests d'Intégration et des Contrats REST}
+
+\begin{table}[h!]
+\centering
+\small
+\renewcommand{\arraystretch}{1.2}
+\begin{tabularx}{\textwidth}{|l|l|X|}
+\hline
+\rowcolor{headergray}
+\textbf{Composant} & \textbf{Méthode de test (@Test)} & \textbf{Scénario et comportement attendu} \\
+\hline
+\texttt{CvProfileService} & \texttt{testCreateAndLifecycle} & Création persistance JPA, mise à jour isolée du style et du contenu sans déclenchement d'IA. \\
+\hline
+\texttt{CvProfileService} & \texttt{testAtsCountryRule\_PhotoSuppressedForUS} & Règle métier ATS : masquage systématique de la photo lorsque le pays ciblé est anglo-saxon (US/UK). \\
+\hline
+\texttt{CvProfileController} & \texttt{testGenerateCvEndpoint} & Appel HTTP POST \texttt{/generate} vérifiant le code 201 Created et la conformité du payload JSON retourné. \\
+\hline
+\texttt{CvProfileController} & \texttt{testGenerateCvEndpoint\_ValidationFailure} & Détection des contraintes Bean Validation et retour d'un ProblemDetail RFC 7807 (HTTP 400). \\
+\hline
+\texttt{CvProfileController} & \texttt{testGetCvProfile} & Interrogation GET \texttt{/api/v1/cv/\{id\}} validant la restitution conforme du profil persistant. \\
+\hline
+\texttt{CvProfileController} & \texttt{testUpdateStyleEndpoint} & Appel PUT validant la mise à jour exclusive des paramètres graphiques (\texttt{primaryColor}, etc.). \\
+\hline
+\texttt{CvProfileController} & \texttt{testMatchEndpoint} & Appel POST \texttt{/match} validant le recalibrage du score face à une annonce d'emploi transmise. \\
+\hline
+\texttt{CvProfileController} & \texttt{testUploadPhotoEndpoint} & Test de téléversement multipart validant le stockage sur disque et l'attribution de l'URI d'avatar. \\
+\hline
+\texttt{CvProfileController} & \texttt{testDownloadPdfEndpoint} & Téléchargement du PDF via l'API REST avec vérification de l'en-tête \texttt{Content-Type: application/pdf}. \\
+\hline
+\end{tabularx}
+\caption{Référentiel détaillé des tests d'intégration et des contrats d'API}
+\end{table}
+
+\end{document}

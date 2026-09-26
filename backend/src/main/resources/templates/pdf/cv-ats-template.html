@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head>
+    <meta charset="UTF-8"/>
+    <title th:text="${content.contactInfo != null ? content.contactInfo.fullName : 'Curriculum Vitae'}">CV</title>
+    <style>
+        @page {
+            size: A4 portrait;
+            margin: 18mm 16mm 18mm 16mm;
+            @bottom-right {
+                content: counter(page) " / " counter(pages);
+                font-family: Arial, sans-serif;
+                font-size: 8pt;
+                color: #718096;
+            }
+        }
+
+        body {
+            font-family: /*[[${style.fontFamily}]]*/ "Helvetica", Arial, sans-serif;
+            color: #1a202c;
+            background-color: #ffffff;
+            margin: 0;
+            padding: 0;
+            line-height: 1.4;
+            font-size: 10pt;
+        }
+
+        /* Densité dynamique */
+        body.density-compact {
+            line-height: 1.25;
+            font-size: 9.5pt;
+        }
+        body.density-compact .section-block {
+            margin-bottom: 10px;
+        }
+        body.density-compact .item-block {
+            margin-bottom: 6px;
+        }
+
+        body.density-normal {
+            line-height: 1.4;
+            font-size: 10pt;
+        }
+        body.density-normal .section-block {
+            margin-bottom: 14px;
+        }
+        body.density-normal .item-block {
+            margin-bottom: 8px;
+        }
+
+        body.density-spacious {
+            line-height: 1.55;
+            font-size: 10.5pt;
+        }
+        body.density-spacious .section-block {
+            margin-bottom: 18px;
+        }
+        body.density-spacious .item-block {
+            margin-bottom: 12px;
+        }
+
+        /* En-tête contact */
+        .cv-header {
+            border-bottom: 2px solid;
+            border-color: /*[[${style.primaryColor}]]*/ #1a365d;
+            padding-bottom: 10px;
+            margin-bottom: 14px;
+        }
+
+        .header-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .header-info {
+            vertical-align: top;
+        }
+
+        .header-photo-cell {
+            width: 85px;
+            text-align: right;
+            vertical-align: top;
+        }
+
+        .candidate-photo {
+            width: 75px;
+            height: 90px;
+            border-radius: 4px;
+            border: 1px solid #cbd5e0;
+        }
+
+        h1.candidate-name {
+            font-size: 18pt;
+            font-weight: bold;
+            margin: 0 0 4px 0;
+            color: /*[[${style.primaryColor}]]*/ #1a365d;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .target-title {
+            font-size: 12pt;
+            font-weight: bold;
+            color: #4a5568;
+            margin: 0 0 6px 0;
+        }
+
+        .contact-line {
+            font-size: 9pt;
+            color: #4a5568;
+        }
+
+        .contact-line span {
+            display: inline;
+        }
+
+        .contact-sep {
+            color: #a0aec0;
+            margin: 0 4px;
+        }
+
+        /* Titres de section ATS */
+        h2.section-title {
+            font-size: 11pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: /*[[${style.primaryColor}]]*/ #1a365d;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 3px;
+            margin: 0 0 8px 0;
+            page-break-after: avoid;
+        }
+
+        /* Expériences et formations */
+        .item-header {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 2px;
+        }
+
+        .item-title {
+            font-weight: bold;
+            font-size: 10.5pt;
+            color: #2d3748;
+            text-align: left;
+        }
+
+        .item-company {
+            font-style: italic;
+            color: #4a5568;
+        }
+
+        .item-date {
+            text-align: right;
+            font-weight: bold;
+            font-size: 9pt;
+            color: #718096;
+            white-space: nowrap;
+        }
+
+        .item-location {
+            text-align: right;
+            font-size: 8.5pt;
+            color: #a0aec0;
+            font-style: italic;
+        }
+
+        /* Bullets */
+        ul.bullet-list {
+            margin: 4px 0 0 0;
+            padding-left: 18px;
+        }
+
+        ul.bullet-list.bullet-disc { list-style-type: disc; }
+        ul.bullet-list.bullet-circle { list-style-type: circle; }
+        ul.bullet-list.bullet-square { list-style-type: square; }
+        ul.bullet-list.bullet-hyphen { list-style-type: square; }
+
+        ul.bullet-list li {
+            margin-bottom: 3px;
+            text-align: justify;
+        }
+
+        /* Compétences */
+        .skill-group {
+            margin-bottom: 5px;
+        }
+        .skill-category-name {
+            font-weight: bold;
+            color: #2d3748;
+        }
+        .skill-items {
+            color: #4a5568;
+        }
+
+        /* Résumé professionnel */
+        .summary-text {
+            text-align: justify;
+            margin: 0;
+        }
+    </style>
+</head>
+<body th:class="'density-' + ${#strings.toLowerCase(style.density)}">
+
+    <!-- En-tête ATS -->
+    <header class="cv-header">
+        <table class="header-table">
+            <tr>
+                <td class="header-info">
+                    <h1 class="candidate-name" th:text="${content.contactInfo != null ? content.contactInfo.fullName : 'Candidat'}">Nom Prénom</h1>
+                    <div class="target-title" th:if="${profile.targetCountry != null}" th:text="${(content.matchResult != null and content.matchResult.targetJobTitle != null) ? content.matchResult.targetJobTitle : ''}">Poste Recherché</div>
+                    <div class="contact-line" th:if="${content.contactInfo != null}">
+                        <span th:if="${content.contactInfo.email != null and !content.contactInfo.email.isEmpty()}" th:text="${content.contactInfo.email}">email@domain.com</span>
+                        <span class="contact-sep" th:if="${content.contactInfo.email != null and !content.contactInfo.email.isEmpty() and content.contactInfo.phone != null and !content.contactInfo.phone.isEmpty()}">•</span>
+                        <span th:if="${content.contactInfo.phone != null and !content.contactInfo.phone.isEmpty()}" th:text="${content.contactInfo.phone}">+33 6 00 00 00 00</span>
+                        <span class="contact-sep" th:if="${content.contactInfo.phone != null and !content.contactInfo.phone.isEmpty() and content.contactInfo.location != null and !content.contactInfo.location.isEmpty()}">•</span>
+                        <span th:if="${content.contactInfo.location != null and !content.contactInfo.location.isEmpty()}" th:text="${content.contactInfo.location}">Paris, France</span>
+                        <span class="contact-sep" th:if="${content.contactInfo.location != null and !content.contactInfo.location.isEmpty() and content.contactInfo.linkedinUrl != null and !content.contactInfo.linkedinUrl.isEmpty()}">•</span>
+                        <span th:if="${content.contactInfo.linkedinUrl != null and !content.contactInfo.linkedinUrl.isEmpty()}" th:text="${content.contactInfo.linkedinUrl}">linkedin.com/in/...</span>
+                    </div>
+                </td>
+                <td class="header-photo-cell" th:if="${style.showPhoto and photoDataUri != null}">
+                    <img class="candidate-photo" th:src="${photoDataUri}" alt="Photo de profil"/>
+                </td>
+            </tr>
+        </table>
+    </header>
+
+    <!-- Sections dynamiques selon style.sectionOrder -->
+    <main>
+        <th:block th:each="sec : ${style.sectionOrder}">
+
+            <!-- SECTION : RÉSUMÉ PROFESSIONNEL -->
+            <section class="section-block" th:if="${sec == 'SUMMARY' and content.professionalSummary != null and !content.professionalSummary.isEmpty()}">
+                <h2 class="section-title">Profil Professionnel</h2>
+                <p class="summary-text" th:text="${content.professionalSummary}">Résumé professionnel optimisé ATS...</p>
+            </section>
+
+            <!-- SECTION : EXPÉRIENCES PROFESSIONNELLES -->
+            <section class="section-block" th:if="${sec == 'EXPERIENCE' and content.experiences != null and !content.experiences.isEmpty()}">
+                <h2 class="section-title">Expérience Professionnelle</h2>
+                <div class="item-block" th:each="exp : ${content.experiences}">
+                    <table class="item-header">
+                        <tr>
+                            <td class="item-title">
+                                <span th:text="${exp.title}">Titre du poste</span> – <span class="item-company" th:text="${exp.company}">Entreprise</span>
+                            </td>
+                            <td class="item-date">
+                                <span th:text="${exp.startDate}">2022</span> – <span th:text="${exp.currentJob ? 'Présent' : exp.endDate}">2024</span>
+                            </td>
+                        </tr>
+                        <tr th:if="${exp.location != null and !exp.location.isEmpty()}">
+                            <td colspan="2" class="item-location" th:text="${exp.location}">Lieu</td>
+                        </tr>
+                    </table>
+                    <ul th:class="'bullet-list bullet-' + ${#strings.toLowerCase(style.bulletStyle)}" th:if="${exp.bullets != null and !exp.bullets.isEmpty()}">
+                        <li th:each="bullet : ${exp.bullets}" th:text="${bullet}">Action verbe avec accomplissement quantifié.</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- SECTION : FORMATIONS -->
+            <section class="section-block" th:if="${sec == 'EDUCATION' and content.educations != null and !content.educations.isEmpty()}">
+                <h2 class="section-title">Formation &amp; Diplômes</h2>
+                <div class="item-block" th:each="edu : ${content.educations}">
+                    <table class="item-header">
+                        <tr>
+                            <td class="item-title">
+                                <span th:text="${edu.degree}">Diplôme</span>, <span class="item-company" th:text="${edu.institution}">Établissement</span>
+                            </td>
+                            <td class="item-date">
+                                <span th:text="${edu.graduationDate != null ? edu.graduationDate : edu.startDate}">2019</span>
+                            </td>
+                        </tr>
+                        <tr th:if="${edu.details != null and !edu.details.isEmpty()}">
+                            <td colspan="2" class="item-location" th:text="${edu.details}">Détails spécialisation</td>
+                        </tr>
+                    </table>
+                </div>
+            </section>
+
+            <!-- SECTION : COMPÉTENCES -->
+            <section class="section-block" th:if="${sec == 'SKILLS' and content.skills != null and !content.skills.isEmpty()}">
+                <h2 class="section-title">Compétences Clés</h2>
+                <div class="skill-group" th:each="cat : ${content.skills}">
+                    <span class="skill-category-name" th:text="${cat.categoryName + ' : '}">Catégorie : </span>
+                    <span class="skill-items" th:text="${#strings.listJoin(cat.skills, ', ')}">Compétence 1, Compétence 2</span>
+                </div>
+            </section>
+
+        </th:block>
+    </main>
+
+</body>
+</html>

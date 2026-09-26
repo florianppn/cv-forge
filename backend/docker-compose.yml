@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: cvforge-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-cvforge_db}
+      POSTGRES_USER: ${POSTGRES_USER:-cvforge}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cvforge_password}
+    ports:
+      - "5432:5432"
+    volumes:
+      - cvforge_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-cvforge} -d ${POSTGRES_DB:-cvforge_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  cvforge_pgdata:
