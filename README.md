@@ -33,21 +33,6 @@ docker compose logs -f
 | **Endpoint Génération IA** | `POST http://localhost:8080/api/v1/cv/generate` |
 | **Exportation PDF ATS** | `GET http://localhost:8080/api/v1/cv/{id}/pdf` |
 
-## Lancement en Développement Local
-
-### Prérequis
-- Java 21+
-- Maven 3.9+
-
-### Exécuter la suite de tests
-```bash
-mvn clean test -f backend/pom.xml
-```
-
-### Démarrer le backend Spring Boot
-```bash
-mvn spring-boot:run -f backend/pom.xml
-```
 
 ## Documentation
 
