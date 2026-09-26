@@ -42,11 +42,11 @@ export class InitialFormComponent {
 
   loadSampleData(): void {
     this.formData = {
-      fullName: 'Florian Pépin',
-      email: 'florian.pepin@example.com',
+      fullName: 'John Doe',
+      email: 'john.doe@example.com',
       phone: '+33 6 12 34 56 78',
       location: 'Paris, France',
-      linkedinUrl: 'https://linkedin.com/in/florian-pepin',
+      linkedinUrl: 'https://linkedin.com/in/john-doe',
       targetJobTitle: 'Architecte Logiciel Backend Java & Cloud',
       targetCountry: 'FR',
       rawProfileText: `Ingénieur logiciel senior avec 8 ans d'expérience. 

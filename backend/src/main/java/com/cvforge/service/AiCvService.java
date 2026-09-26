@@ -155,12 +155,12 @@ public class AiCvService {
 
     private CvContent generateMockCvContent(AiCvGenerateRequest request) {
         ContactInfo contact = ContactInfo.builder()
-                .fullName(request.getFullName() != null ? request.getFullName() : "Florian Développeur")
-                .email(request.getEmail() != null ? request.getEmail() : "florian.pepin@example.com")
+                .fullName(request.getFullName() != null ? request.getFullName() : "John Doe")
+                .email(request.getEmail() != null ? request.getEmail() : "john.doe@example.com")
                 .phone(request.getPhone() != null ? request.getPhone() : "+33 6 12 34 56 78")
                 .location(request.getLocation() != null ? request.getLocation() : "Paris, France")
-                .linkedinUrl(request.getLinkedinUrl() != null ? request.getLinkedinUrl() : "https://linkedin.com/in/florian-pepin")
-                .portfolioUrl(request.getPortfolioUrl() != null ? request.getPortfolioUrl() : "https://github.com/florian")
+                .linkedinUrl(request.getLinkedinUrl() != null ? request.getLinkedinUrl() : "https://linkedin.com/in/john-doe")
+                .portfolioUrl(request.getPortfolioUrl() != null ? request.getPortfolioUrl() : "https://github.com/johndoe")
                 .build();
 
         String summary = String.format(
