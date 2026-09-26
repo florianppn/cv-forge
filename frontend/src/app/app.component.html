@@ -1,0 +1,10 @@
+<div class="min-h-screen flex flex-col bg-slate-100/60 font-sans">
+  <!-- En-tête globale -->
+  <app-header></app-header>
+
+  <!-- Vue Principale : Saisie initiale OU Studio Split-View -->
+  <main class="flex-1 flex flex-col overflow-hidden">
+    <app-initial-form *ngIf="!cvService.hasProfile()"></app-initial-form>
+    <app-studio *ngIf="cvService.hasProfile()"></app-studio>
+  </main>
+</div>

@@ -1,0 +1,476 @@
+<div class="flex flex-col h-full bg-white border-r border-slate-200 shadow-sm">
+
+  <!-- En-tête des Onglets -->
+  <div class="flex border-b border-slate-200 bg-slate-50/75 p-1.5 shrink-0">
+    <button
+      (click)="activeTab.set('content')"
+      [class.bg-white]="activeTab() === 'content'"
+      [class.text-brand-800]="activeTab() === 'content'"
+      [class.shadow-sm]="activeTab() === 'content'"
+      [class.font-semibold]="activeTab() === 'content'"
+      class="flex-1 py-2 text-xs rounded-md text-slate-600 hover:text-slate-900 transition flex items-center justify-center gap-1.5">
+      <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+      </svg>
+      Contenu
+    </button>
+
+    <button
+      (click)="activeTab.set('style')"
+      [class.bg-white]="activeTab() === 'style'"
+      [class.text-brand-800]="activeTab() === 'style'"
+      [class.shadow-sm]="activeTab() === 'style'"
+      [class.font-semibold]="activeTab() === 'style'"
+      class="flex-1 py-2 text-xs rounded-md text-slate-600 hover:text-slate-900 transition flex items-center justify-center gap-1.5">
+      <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4 4 4 0 014-4 4 4 0 014 4 4 4 0 01-4 4zm0 0l4.5-4.5M12 12l8-8 2 2-8 8M10 14l2 2"/>
+      </svg>
+      Design & Style
+    </button>
+
+    <button
+      (click)="activeTab.set('matching')"
+      [class.bg-white]="activeTab() === 'matching'"
+      [class.text-brand-800]="activeTab() === 'matching'"
+      [class.shadow-sm]="activeTab() === 'matching'"
+      [class.font-semibold]="activeTab() === 'matching'"
+      class="flex-1 py-2 text-xs rounded-md text-slate-600 hover:text-slate-900 transition flex items-center justify-center gap-1.5 relative">
+      <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+      </svg>
+      Audit ATS
+      <span *ngIf="profile.content.matchResult" class="inline-flex items-center px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
+        {{ profile.content.matchResult.matchScore }}%
+      </span>
+    </button>
+  </div>
+
+  <!-- Contenu Défilant des Onglets -->
+  <div class="flex-1 overflow-y-auto p-5 space-y-6">
+
+    <!-- ========================================== -->
+    <!-- ONGLET 1 : CONTENU                         -->
+    <!-- ========================================== -->
+    <div *ngIf="activeTab() === 'content'" class="space-y-6">
+
+      <!-- Coordonnées -->
+      <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-700 mb-3 flex items-center gap-2">
+          Coordonnées de Contact
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3" *ngIf="profile.content.contactInfo">
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Nom Complet</label>
+            <input
+              type="text"
+              [(ngModel)]="profile.content.contactInfo.fullName"
+              (ngModelChange)="onContentChange()"
+              class="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:outline-none"
+            />
+          </div>
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Email</label>
+            <input
+              type="email"
+              [(ngModel)]="profile.content.contactInfo.email"
+              (ngModelChange)="onContentChange()"
+              class="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:outline-none"
+            />
+          </div>
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Téléphone</label>
+            <input
+              type="text"
+              [(ngModel)]="profile.content.contactInfo.phone"
+              (ngModelChange)="onContentChange()"
+              class="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:outline-none"
+            />
+          </div>
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Ville, Pays</label>
+            <input
+              type="text"
+              [(ngModel)]="profile.content.contactInfo.location"
+              (ngModelChange)="onContentChange()"
+              class="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:outline-none"
+            />
+          </div>
+          <div class="md:col-span-2">
+            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Profil LinkedIn / Site Web</label>
+            <input
+              type="text"
+              [(ngModel)]="profile.content.contactInfo.linkedinUrl"
+              (ngModelChange)="onContentChange()"
+              class="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:outline-none"
+            />
+          </div>
+        </div>
+      </div>
+
+      <!-- Résumé Professionnel -->
+      <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">
+          Profil Professionnel (Accroche ATS)
+        </h3>
+        <textarea
+          rows="3"
+          [(ngModel)]="profile.content.professionalSummary"
+          (ngModelChange)="onContentChange()"
+          class="w-full p-2.5 text-xs bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:outline-none leading-relaxed"
+          placeholder="2-3 phrases résumant votre proposition de valeur..."
+        ></textarea>
+      </div>
+
+      <!-- Expériences -->
+      <div class="space-y-3">
+        <div class="flex items-center justify-between">
+          <h3 class="text-xs font-bold uppercase tracking-wider text-slate-700">
+            Expériences Professionnelles ({{ profile.content.experiences.length }})
+          </h3>
+          <button
+            (click)="addExperience()"
+            class="px-2 py-1 text-xs font-semibold text-brand-600 bg-brand-50 hover:bg-brand-100 rounded-lg border border-brand-200 transition">
+            + Ajouter un poste
+          </button>
+        </div>
+
+        <div *ngFor="let exp of profile.content.experiences; let expIndex = index" class="p-3.5 bg-white border border-slate-200 rounded-xl shadow-sm space-y-3">
+          <div class="flex justify-between items-start">
+            <div class="grid grid-cols-2 gap-2 flex-1 mr-2">
+              <input
+                type="text"
+                [(ngModel)]="exp.title"
+                (ngModelChange)="onContentChange()"
+                placeholder="Intitulé du poste"
+                class="px-2 py-1 text-xs font-semibold border border-slate-300 rounded focus:ring-1 focus:ring-brand-500"
+              />
+              <input
+                type="text"
+                [(ngModel)]="exp.company"
+                (ngModelChange)="onContentChange()"
+                placeholder="Entreprise"
+                class="px-2 py-1 text-xs border border-slate-300 rounded focus:ring-1 focus:ring-brand-500"
+              />
+              <input
+                type="text"
+                [(ngModel)]="exp.startDate"
+                (ngModelChange)="onContentChange()"
+                placeholder="Début (ex: 2021)"
+                class="px-2 py-1 text-xs border border-slate-300 rounded focus:ring-1 focus:ring-brand-500"
+              />
+              <input
+                type="text"
+                [(ngModel)]="exp.endDate"
+                (ngModelChange)="onContentChange()"
+                placeholder="Fin (ex: Présent)"
+                class="px-2 py-1 text-xs border border-slate-300 rounded focus:ring-1 focus:ring-brand-500"
+              />
+            </div>
+            <button
+              (click)="removeExperience(expIndex)"
+              class="text-slate-400 hover:text-red-600 p-1 transition"
+              title="Supprimer cette expérience">
+              ✕
+            </button>
+          </div>
+
+          <!-- Puces / Bullets de l'expérience -->
+          <div class="pl-2 border-l-2 border-slate-100 space-y-1.5">
+            <label class="block text-[11px] font-semibold text-slate-500">Puces d'accomplissements quantifiés</label>
+            <div *ngFor="let bullet of exp.bullets; let bIndex = index; trackBy: trackByIndex" class="flex items-center gap-1.5">
+              <span class="text-slate-400 text-xs">•</span>
+              <input
+                type="text"
+                [(ngModel)]="exp.bullets[bIndex]"
+                (ngModelChange)="onContentChange()"
+                class="flex-1 px-2 py-1 text-xs border border-slate-200 rounded focus:ring-1 focus:ring-brand-500"
+              />
+              <button
+                (click)="removeBullet(exp, bIndex)"
+                class="text-slate-300 hover:text-red-500 text-xs px-1">
+                ✕
+              </button>
+            </div>
+            <button
+              (click)="addBullet(exp)"
+              class="text-[11px] font-semibold text-brand-600 hover:underline pt-1">
+              + Ajouter une puce d'impact
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Formations -->
+      <div class="space-y-3">
+        <div class="flex items-center justify-between">
+          <h3 class="text-xs font-bold uppercase tracking-wider text-slate-700">
+            Formations & Diplômes
+          </h3>
+          <button
+            (click)="addEducation()"
+            class="px-2 py-1 text-xs font-semibold text-brand-600 bg-brand-50 hover:bg-brand-100 rounded-lg border border-brand-200 transition">
+            + Ajouter
+          </button>
+        </div>
+
+        <div *ngFor="let edu of profile.content.educations; let eduIndex = index" class="p-3 bg-white border border-slate-200 rounded-xl space-y-2">
+          <div class="flex justify-between items-center">
+            <input
+              type="text"
+              [(ngModel)]="edu.degree"
+              (ngModelChange)="onContentChange()"
+              placeholder="Diplôme obtenu"
+              class="flex-1 mr-2 px-2 py-1 text-xs font-semibold border border-slate-300 rounded"
+            />
+            <button (click)="removeEducation(eduIndex)" class="text-slate-400 hover:text-red-600">✕</button>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <input
+              type="text"
+              [(ngModel)]="edu.institution"
+              (ngModelChange)="onContentChange()"
+              placeholder="Établissement"
+              class="px-2 py-1 text-xs border border-slate-200 rounded"
+            />
+            <input
+              type="text"
+              [(ngModel)]="edu.graduationDate"
+              (ngModelChange)="onContentChange()"
+              placeholder="Année d'obtention"
+              class="px-2 py-1 text-xs border border-slate-200 rounded"
+            />
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ========================================== -->
+    <!-- ONGLET 2 : DESIGN & STYLE                  -->
+    <!-- ========================================== -->
+    <div *ngIf="activeTab() === 'style'" class="space-y-6">
+
+      <!-- Couleurs d'accentuation -->
+      <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-700 mb-3">
+          Couleur d'Accent Corporate
+        </h3>
+        <div class="grid grid-cols-3 gap-2 mb-3">
+          <button
+            *ngFor="let c of presetColors"
+            (click)="onColorChange(c.value)"
+            [class.ring-2]="profile.style.primaryColor === c.value"
+            class="flex items-center gap-2 p-2 rounded-lg bg-white border border-slate-200 text-xs font-medium hover:border-slate-400 transition text-left">
+            <span class="w-4 h-4 rounded-full shrink-0" [style.background-color]="c.value"></span>
+            <span class="truncate text-[11px]">{{ c.label }}</span>
+          </button>
+        </div>
+        <div class="flex items-center gap-2 pt-2 border-t border-slate-200">
+          <label class="text-xs font-semibold text-slate-600">Couleur libre :</label>
+          <input
+            type="color"
+            [ngModel]="profile.style.primaryColor"
+            (ngModelChange)="onColorChange($event)"
+            class="w-7 h-7 p-0 border-0 rounded cursor-pointer"
+          />
+          <span class="text-xs font-mono text-slate-500 uppercase">{{ profile.style.primaryColor }}</span>
+        </div>
+      </div>
+
+      <!-- Typographie ATS -->
+      <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">
+          Typographie Conforme ATS
+        </h3>
+        <select
+          [ngModel]="profile.style.fontFamily"
+          (ngModelChange)="onFontChange($event)"
+          class="w-full px-3 py-2 text-xs bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:outline-none">
+          <option *ngFor="let f of fontOptions" [value]="f.value">{{ f.label }}</option>
+        </select>
+        <p class="text-[11px] text-slate-500 mt-1.5">
+          Les polices standards garantissent une extraction textuelle sans altération par les parsers ATS.
+        </p>
+      </div>
+
+      <!-- Densité & Puces -->
+      <div class="grid grid-cols-2 gap-3">
+        <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+          <h3 class="text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">Densité</h3>
+          <div class="space-y-1.5">
+            <label class="flex items-center gap-2 text-xs text-slate-700 cursor-pointer">
+              <input type="radio" name="density" [checked]="profile.style.density === 'COMPACT'" (change)="onDensityChange('COMPACT')"/>
+              Compact (1 page)
+            </label>
+            <label class="flex items-center gap-2 text-xs text-slate-700 cursor-pointer">
+              <input type="radio" name="density" [checked]="profile.style.density === 'NORMAL'" (change)="onDensityChange('NORMAL')"/>
+              Normal (Équilibré)
+            </label>
+            <label class="flex items-center gap-2 text-xs text-slate-700 cursor-pointer">
+              <input type="radio" name="density" [checked]="profile.style.density === 'SPACIOUS'" (change)="onDensityChange('SPACIOUS')"/>
+              Spacieux
+            </label>
+          </div>
+        </div>
+
+        <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+          <h3 class="text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">Style des Puces</h3>
+          <div class="space-y-1.5">
+            <label class="flex items-center gap-2 text-xs text-slate-700 cursor-pointer">
+              <input type="radio" name="bullet" [checked]="profile.style.bulletStyle === 'DISC'" (change)="onBulletChange('DISC')"/>
+              Disque rond (•)
+            </label>
+            <label class="flex items-center gap-2 text-xs text-slate-700 cursor-pointer">
+              <input type="radio" name="bullet" [checked]="profile.style.bulletStyle === 'SQUARE'" (change)="onBulletChange('SQUARE')"/>
+              Carré plein (■)
+            </label>
+            <label class="flex items-center gap-2 text-xs text-slate-700 cursor-pointer">
+              <input type="radio" name="bullet" [checked]="profile.style.bulletStyle === 'HYPHEN'" (change)="onBulletChange('HYPHEN')"/>
+              Tiret simple (-)
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ordre des sections -->
+      <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">
+          Ordre des Rubriques
+        </h3>
+        <div class="space-y-1.5">
+          <div
+            *ngFor="let sec of profile.style.sectionOrder; let i = index"
+            class="flex items-center justify-between px-3 py-2 bg-white rounded-lg border border-slate-200 text-xs">
+            <span class="font-semibold text-slate-700">{{ getSectionTitle(sec) }}</span>
+            <div class="flex items-center gap-1">
+              <button
+                (click)="moveSectionUp(i)"
+                [disabled]="i === 0"
+                class="p-1 text-slate-400 hover:text-slate-800 disabled:opacity-30">
+                ▲
+              </button>
+              <button
+                (click)="moveSectionDown(i)"
+                [disabled]="i === profile.style.sectionOrder.length - 1"
+                class="p-1 text-slate-400 hover:text-slate-800 disabled:opacity-30">
+                ▼
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Photo de profil & Règle pays ATS -->
+      <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
+        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-700">
+          Photo de Profil & Règle ATS
+        </h3>
+
+        <!-- Avertissement pays anglo-saxon -->
+        <div *ngIf="!profile.style.showPhoto" class="p-2.5 rounded-lg bg-amber-50 border border-amber-200 text-[11px] text-amber-800">
+          <strong>Règle ATS active ({{ profile.targetCountry }}) :</strong> La photo est automatiquement masquée pour respecter les réglementations anti-discrimination en vigueur.
+        </div>
+
+        <div class="flex items-center gap-3">
+          <input
+            type="file"
+            #fileInput
+            (change)="onPhotoSelected($event)"
+            accept="image/png, image/jpeg, image/webp"
+            class="hidden"
+          />
+          <button
+            (click)="fileInput.click()"
+            class="px-3 py-1.5 text-xs font-semibold bg-white border border-slate-300 hover:border-slate-400 rounded-lg text-slate-700 transition">
+            {{ profile.photoUrl ? 'Changer la photo' : 'Téléverser une photo' }}
+          </button>
+          <span class="text-[11px] text-slate-400">JPEG, PNG, WEBP (Max 2 Mo)</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ========================================== -->
+    <!-- ONGLET 3 : AUDIT ATS & MATCHING            -->
+    <!-- ========================================== -->
+    <div *ngIf="activeTab() === 'matching'" class="space-y-6">
+
+      <!-- Jauge de score -->
+      <div *ngIf="profile.content.matchResult" class="bg-slate-50 p-5 rounded-xl border border-slate-200 flex flex-col items-center">
+        <app-ats-gauge [score]="profile.content.matchResult.matchScore"></app-ats-gauge>
+      </div>
+
+      <!-- Formulaire d'analyse -->
+      <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
+        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-700">
+          Comparer avec une Annonce Ciblée
+        </h3>
+        <textarea
+          rows="4"
+          [ngModel]="jobOfferInput()"
+          (ngModelChange)="jobOfferInput.set($event)"
+          placeholder="Collez ici le texte de l'offre d'emploi pour évaluer votre compatibilité ATS..."
+          class="w-full p-2.5 text-xs bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:outline-none"
+        ></textarea>
+        <button
+          (click)="runMatching()"
+          [disabled]="cvService.isMatching() || !jobOfferInput().trim()"
+          class="w-full py-2 px-3 text-xs font-semibold text-white bg-brand-700 hover:bg-brand-800 disabled:opacity-50 rounded-lg transition shadow-sm flex items-center justify-center gap-2">
+          <span *ngIf="cvService.isMatching()" class="animate-spin text-sm">⏳</span>
+          {{ cvService.isMatching() ? 'Analyse ATS en cours...' : 'Évaluer la Concordance ATS' }}
+        </button>
+      </div>
+
+      <!-- Mots-clés Détectés vs Manquants -->
+      <div *ngIf="profile.content.matchResult" class="space-y-4">
+        <!-- Mots-clés trouvés -->
+        <div class="bg-white p-4 rounded-xl border border-emerald-100 shadow-sm">
+          <h4 class="text-xs font-bold text-emerald-800 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+            Mots-clés Validés ({{ profile.content.matchResult.matchedKeywords.length }})
+          </h4>
+          <div class="flex flex-wrap gap-1.5">
+            <span
+              *ngFor="let kw of profile.content.matchResult.matchedKeywords"
+              class="px-2 py-0.5 text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-md">
+              ✓ {{ kw }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Mots-clés manquants -->
+        <div class="bg-white p-4 rounded-xl border border-red-100 shadow-sm">
+          <h4 class="text-xs font-bold text-red-800 uppercase tracking-wider mb-1 flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-red-500"></span>
+            Mots-clés Manquants ({{ profile.content.matchResult.missingKeywords.length }})
+          </h4>
+          <p class="text-[11px] text-slate-500 mb-2">Cliquez pour insérer directement dans vos compétences :</p>
+          <div class="flex flex-wrap gap-1.5">
+            <button
+              *ngFor="let kw of profile.content.matchResult.missingKeywords"
+              (click)="addMissingKeywordToSkills(kw)"
+              class="px-2 py-0.5 text-[11px] font-semibold bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-md transition flex items-center gap-1"
+              title="Ajouter aux compétences">
+              + {{ kw }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Conseils et Suggestions -->
+        <div *ngIf="profile.content.matchResult.suggestions?.length" class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2">
+          <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider">
+            Recommandations d'Optimisation ATS
+          </h4>
+          <ul class="text-xs text-slate-600 space-y-1.5 list-disc pl-4">
+            <li *ngFor="let sug of profile.content.matchResult.suggestions">
+              {{ sug }}
+            </li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>

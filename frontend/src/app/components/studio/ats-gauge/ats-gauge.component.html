@@ -1,0 +1,35 @@
+<div class="flex flex-col items-center">
+  <div class="relative w-28 h-28 flex items-center justify-center">
+    <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+      <!-- Background track -->
+      <circle
+        cx="50"
+        cy="50"
+        r="42"
+        stroke="#e2e8f0"
+        stroke-width="8"
+        fill="transparent"
+      />
+      <!-- Progress indicator -->
+      <circle
+        class="progress-ring-circle"
+        cx="50"
+        cy="50"
+        r="42"
+        [attr.stroke]="strokeColor"
+        stroke-width="8"
+        stroke-linecap="round"
+        fill="transparent"
+        stroke-dasharray="263.89"
+        [attr.stroke-dashoffset]="strokeDashoffset"
+      />
+    </svg>
+    <div class="absolute flex flex-col items-center justify-center">
+      <span class="text-2xl font-bold tracking-tight" [style.color]="strokeColor">
+        {{ score }}%
+      </span>
+      <span class="text-[10px] uppercase font-semibold text-slate-400">Score ATS</span>
+    </div>
+  </div>
+  <p class="mt-2 text-xs font-medium text-slate-600 text-center">{{ label }}</p>
+</div>

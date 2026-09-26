@@ -341,13 +341,66 @@ Afin d'assurer une fiabilité absolue du moteur de rendu, de la sérialisation J
 
 \textbf{Pourquoi :} Télécharger un PDF généré par le serveur à chaque clic sur une nuance de couleur introduirait une latence insupportable et saturerait le réseau. L'aperçu Angular reflète fidèlement la structure du template PDF en appliquant les variables CSS locales, réservant l'appel au serveur pour l'exportation finale.
 
+\subsubsection{Axe 12 : Séparation stricte des responsabilités et isolation des fichiers composants}
+\textbf{Question :} Comment organiser l'architecture interne des composants Angular pour assurer une maintenabilité irréprochable et proscrire la dette technique ?
+
+\textbf{Options :}
+\begin{itemize}
+    \item[$\boxtimes$] Séparation rigoureuse et systématique en triplets de fichiers distincts (\texttt{.component.ts}, \texttt{.component.html}, \texttt{.component.css}) pour chaque composant applicatif, proscrivant formellement l'\textit{inline}.
+    \item[$\square$] Modèle hybride autorisant les templates et styles \textit{inline} dans le fichier TypeScript.
+    \item[$\square$] Styles globaux uniques partagés sans aucune encapsulation de composant.
+\end{itemize}
+
+\textbf{Pourquoi :} L'entremêlement du code logique TypeScript, du balisage HTML et des règles de style CSS dans un unique fichier monolithique nuit gravement à la lisibilité et complique les revues de code. En imposant un triplet de fichiers dédié pour chaque brique de l'interface (\texttt{Header}, \texttt{InitialForm}, \texttt{Studio}, \texttt{EditorPanel}, \texttt{PreviewSheet}, \texttt{AtsGauge}), chaque responsabilité demeure parfaitement isolée, maintenable et testable unitairement.
+
+\subsubsection{Axe 13 : Ergonomie du Studio en écran partagé (Split-View)}
+\textbf{Question :} Comment concevoir l'espace de travail pour concilier édition granulaire et vision globale du CV ?
+
+\textbf{Options :}
+\begin{itemize}
+    \item[$\boxtimes$] Espace Studio en écran partagé (\textit{Split-View}) associant un volet d'outils à gauche (onglets Contenu, Style, Audit ATS) et la feuille A4 temps réel à droite.
+    \item[$\square$] Assistant séquentiel par étapes masquant l'aperçu durant les modifications.
+    \item[$\square$] Formulaire unique de saisie avec redirection vers une page d'aperçu finale.
+\end{itemize}
+
+\textbf{Pourquoi :} L'élaboration d'un CV est un processus itératif où chaque ajout textuel ou ajustement de marge influe sur la pagination et l'équilibre visuel du document. Le Studio Split-View permet au candidat d'ajuster une puce ou de modifier une nuance tout en observant immédiatement le résultat sur la feuille A4 virtuelle, sans jamais perdre le contexte de son document.
+
+\subsection{Arborescence et architecture des composants}
+
+\begin{table}[h!]
+\centering
+\small
+\renewcommand{\arraystretch}{1.2}
+\begin{tabularx}{\textwidth}{|l|l|X|}
+\hline
+\rowcolor{headergray}
+\textbf{Composant Angular} & \textbf{Triplets de fichiers} & \textbf{Rôle et responsabilité fonctionnelle} \\
+\hline
+\texttt{AppComponent} & \texttt{.ts, .html, .css} & Orchestrateur racine commutant entre l'ingestion brute et le Studio. \\
+\hline
+\texttt{HeaderComponent} & \texttt{.ts, .html, .css} & En-tête globale, historique des CVs de session, export PDF officiel. \\
+\hline
+\texttt{InitialFormComponent} & \texttt{.ts, .html, .css} & Saisie brute, sélecteur de pays avec règle anti-biais, chargement démo. \\
+\hline
+\texttt{StudioComponent} & \texttt{.ts, .html, .css} & Conteneur d'atelier Split-View coordonnant l'éditeur et la prévisualisation. \\
+\hline
+\texttt{EditorPanelComponent} & \texttt{.ts, .html, .css} & Volet gauche à 3 onglets (Contenu, Design \& Style, Audit de matching). \\
+\hline
+\texttt{PreviewSheetComponent} & \texttt{.ts, .html, .css} & Rendu feuille A4 haute fidélité avec zoom réactif et typographies ATS. \\
+\hline
+\texttt{AtsGaugeComponent} & \texttt{.ts, .html, .css} & Jauge SVG circulaire animée indiquant le score d'adéquation ATS. \\
+\hline
+\end{tabularx}
+\caption{Répertoire modulaire des composants de l'application Angular}
+\end{table}
+
 \subsection{Écrans et parcours utilisateur}
 
 L'application guide le candidat au travers d'un flux linéaire pensé pour minimiser l'effort de saisie :
 \begin{enumerate}
-    \item \textbf{Écran 1 : Saisie brute des informations (\texttt{/}) } : Le candidat colle son parcours professionnel brut, ses formations, ses coordonnées et optionnellement l'annonce ciblée.
-    \item \textbf{Écran 2 : Atelier d'optimisation et d'aperçu (\texttt{/cv/:id}) } : Affichage en direct du CV structuré par l'IA. Le candidat peut retoucher le texte manuellement, visualiser son score de matching ATS (mots-clés trouvés et suggestions), uploader sa photo et personnaliser son thème visuel (couleurs, puces, marges).
-    \item \textbf{Écran 3 : Exportation certifiée ATS} : Téléchargement en un clic du PDF vectoriel prêt pour les plateformes d'embauche.
+    \item \textbf{Écran 1 : Saisie brute des informations (\texttt{/})} : Le candidat colle son parcours professionnel brut, ses formations, ses coordonnées et optionnellement l'annonce ciblée.
+    \item \textbf{Écran 2 : Atelier d'optimisation et d'aperçu en Split-View} : Affichage en direct du CV structuré par l'IA. Le candidat peut retoucher le texte manuellement, visualiser son score de matching ATS (mots-clés trouvés et suggestions), uploader sa photo et personnaliser son thème visuel (couleurs, puces, marges) sans latence serveur.
+    \item \textbf{Écran 3 : Exportation certifiée ATS} : Téléchargement en un clic du PDF vectoriel compilé par le moteur Spring Boot prêt pour les plateformes d'embauche.
 \end{enumerate}
 
 \newpage

@@ -1,0 +1,58 @@
+<header class="h-16 bg-white border-b border-slate-200 px-6 flex items-center justify-between shadow-sm z-20 shrink-0">
+
+  <!-- Logo et Titre -->
+  <div class="flex items-center space-x-3 cursor-pointer" (click)="onNewCv()">
+    <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-brand-800 to-brand-600 flex items-center justify-center text-white font-bold shadow-md shadow-brand-800/20">
+      ⚡
+    </div>
+    <div>
+      <div class="flex items-center gap-2">
+        <span class="text-base font-extrabold tracking-tight text-slate-900">CV-FORGE</span>
+        <span class="px-1.5 py-0.5 rounded text-[10px] font-bold tracking-wide uppercase bg-emerald-100 text-emerald-800 border border-emerald-200">
+          ATS-First
+        </span>
+      </div>
+      <p class="text-[11px] text-slate-500 font-medium">Générateur & Auditeur de CV par IA</p>
+    </div>
+  </div>
+
+  <!-- Actions Centrales & Historique Session -->
+  <div class="flex items-center space-x-3" *ngIf="cvService.hasProfile()">
+
+    <!-- Sélecteur de CVs sauvegardés dans la session -->
+    <div class="flex items-center space-x-1.5" *ngIf="cvService.profilesList().length > 1">
+      <label class="text-xs font-semibold text-slate-500">Mes CVs :</label>
+      <select
+        (change)="onSelectProfile($event)"
+        class="text-xs font-medium bg-slate-100 border border-slate-200 rounded-lg px-2.5 py-1.5 text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500">
+        <option
+          *ngFor="let p of cvService.profilesList()"
+          [value]="p.id"
+          [selected]="p.id === cvService.currentProfile()?.id">
+          {{ p.content.contactInfo?.fullName || 'CV' }} – {{ p.content.matchResult?.targetJobTitle || p.targetCountry }}
+        </option>
+      </select>
+    </div>
+
+    <!-- Bouton Nouveau CV -->
+    <button
+      (click)="onNewCv()"
+      class="px-3 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition border border-slate-200 flex items-center gap-1.5">
+      <span>+</span> Nouveau CV
+    </button>
+
+    <!-- Bouton Télécharger PDF ATS -->
+    <button
+      (click)="onDownloadPdf()"
+      [disabled]="cvService.isExporting()"
+      class="px-4 py-2 text-xs font-bold text-white bg-brand-800 hover:bg-brand-900 active:bg-brand-950 rounded-lg transition shadow-md shadow-brand-800/10 flex items-center gap-2 disabled:opacity-50">
+      <svg *ngIf="!cvService.isExporting()" class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+      </svg>
+      <span *ngIf="cvService.isExporting()" class="animate-spin text-sm">⏳</span>
+      <span>{{ cvService.isExporting() ? 'Génération du PDF...' : 'Télécharger PDF ATS' }}</span>
+    </button>
+
+  </div>
+
+</header>

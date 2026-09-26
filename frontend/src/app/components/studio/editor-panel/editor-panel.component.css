@@ -1,0 +1,12 @@
+:host {
+  display: block;
+  height: 100%;
+}
+
+input[type="color"]::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+input[type="color"]::-webkit-color-swatch {
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+}

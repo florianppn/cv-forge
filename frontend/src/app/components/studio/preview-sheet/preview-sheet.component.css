@@ -1,0 +1,54 @@
+.a4-sheet {
+  width: 210mm;
+  min-height: 297mm;
+  padding: 18mm 16mm;
+  box-sizing: border-box;
+}
+
+/* Densités */
+.density-compact {
+  line-height: 1.25;
+}
+.density-compact .cv-section {
+  margin-bottom: 12px;
+}
+.density-compact .experience-item,
+.density-compact .education-item {
+  margin-bottom: 6px;
+}
+
+.density-normal {
+  line-height: 1.4;
+}
+.density-normal .cv-section {
+  margin-bottom: 16px;
+}
+.density-normal .experience-item,
+.density-normal .education-item {
+  margin-bottom: 10px;
+}
+
+.density-spacious {
+  line-height: 1.55;
+}
+.density-spacious .cv-section {
+  margin-bottom: 22px;
+}
+.density-spacious .experience-item,
+.density-spacious .education-item {
+  margin-bottom: 14px;
+}
+
+/* Puces */
+.bullet-disc ul.bullet-list {
+  list-style-type: disc;
+}
+.bullet-circle ul.bullet-list {
+  list-style-type: circle;
+}
+.bullet-square ul.bullet-list {
+  list-style-type: square;
+}
+.bullet-hyphen ul.bullet-list {
+  list-style-type: "- ";
+}

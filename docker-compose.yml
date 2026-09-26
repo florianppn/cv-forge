@@ -38,6 +38,17 @@ services:
     volumes:
       - cvforge_uploads:/app/uploads
 
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: cvforge-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "4200:80"
+
 volumes:
   cvforge_pgdata:
   cvforge_uploads:

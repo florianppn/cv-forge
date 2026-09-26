@@ -66,3 +66,13 @@ doc/*.synctex.gz
 doc/*.toc
 doc/*.out
 doc/*.log
+
+# Node / Angular / Frontend
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+.angular/
+**/.angular/
+.npm/
+
